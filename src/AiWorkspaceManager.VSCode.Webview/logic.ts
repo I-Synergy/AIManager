@@ -44,7 +44,7 @@ export function filterItems(items: CatalogItem[], filters: FilterState): Catalog
     if (filters.source !== "all" && item.source !== filters.source) {
       return false;
     }
-    if (filters.state === "installed" && !item.selected) {
+    if (filters.state === "installed" && !item.selected && !item.installed) {
       return false;
     }
     if (filters.state === "available" && item.selected) {
@@ -78,7 +78,7 @@ export function filterInstalled(
 ): CatalogItem[] {
   const needle = filters.query.trim().toLowerCase();
   return items.filter((item) => {
-    if (!item.selected) {
+    if (!item.selected && !item.installed) {
       return false;
     }
     if (filters.kind !== "all" && item.kind !== filters.kind) {
@@ -164,12 +164,13 @@ export function groupBySource<T extends { source: string }>(
 }
 
 export function groupInstalled(items: CatalogItem[]): InstalledGroup[] {
-  const selected = items.filter((item) => item.selected);
+  // Lock-recorded items are installed even when the manifest no longer selects them.
+  const present = items.filter((item) => item.selected || item.installed);
   const groups: InstalledGroup[] = [
-    { key: "attention", label: "Needs attention", items: selected.filter((item) => isAttention(item.status)) },
-    { key: "pending", label: "Selected, not materialised", items: selected.filter((item) => item.status === "not-installed") },
-    { key: "locked", label: "Locked", items: selected.filter((item) => item.status === "locked") },
-    { key: "synced", label: "In sync", items: selected.filter((item) => item.status === "ok") },
+    { key: "attention", label: "Needs attention", items: present.filter((item) => isAttention(item.status)) },
+    { key: "pending", label: "Selected, not materialised", items: present.filter((item) => item.status === "not-installed") },
+    { key: "locked", label: "Locked", items: present.filter((item) => item.status === "locked") },
+    { key: "synced", label: "In sync", items: present.filter((item) => item.status === "ok") },
   ];
   return groups.filter((group) => group.items.length > 0);
 }

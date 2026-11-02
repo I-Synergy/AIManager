@@ -375,16 +375,16 @@ export class BrowseView extends LitElement {
    * anything that needs a decision, nothing for plain catalog entries.
    */
   private renderState(item: CatalogItem) {
-    if (item.selected && item.status === "ok") {
+    if ((item.selected || item.installed) && item.status === "ok") {
       const why = item.requiredBy?.length
         ? ` (required by ${item.requiredBy.map((id) => displayId(id)).join(", ")})`
         : "";
       return html`<span class="synced" title="Installed and in sync${why}">&#10003;</span>`;
     }
-    if (!item.selected) {
+    if (!item.selected && !item.installed) {
       return html`<span></span>`;
     }
-    return html`<state-pill .status=${item.status} .selected=${true}></state-pill>`;
+    return html`<state-pill .status=${item.status} .selected=${item.selected}></state-pill>`;
   }
 
   private renderDetail(item: CatalogItem) {

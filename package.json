@@ -1,8 +1,8 @@
 {
   "name": "aiworkspacemanager",
   "displayName": "AI Workspace Manager for Visual Studio Code",
-  "description": "Browse, install, update and prune the skills and agents each repository installs \u2014 a full-page front-end for a bundled .NET resolver",
-  "version": "0.13.2",
+  "description": "Browse, install, update and prune the skills and agents each repository installs — a full-page front-end for a bundled .NET resolver",
+  "version": "0.13.3",
   "publisher": "I-Synergy",
   "license": "MIT",
   "icon": "images/icon.png",

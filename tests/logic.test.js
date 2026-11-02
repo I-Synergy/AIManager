@@ -326,9 +326,21 @@ function owned(overrides) {
   return item({ selected: true, installed: true, status: "ok", ...overrides });
 }
 
-test("filterInstalled only ever returns selected items", () => {
-  const items = [owned({}), item({ id: "template:beta", displayId: "beta" })];
-  assert.deepEqual(logic.filterInstalled(items, filters).map((i) => i.displayId), ["alpha"]);
+test("groupInstalled includes lock-recorded items that are not selected", () => {
+  const groups = logic.groupInstalled([
+    owned({}),
+    item({ id: "template:beta", displayId: "beta", installed: true, status: "ok" }),
+  ]);
+  assert.deepEqual(groups.map((group) => group.label), ["In sync"]);
+  assert.deepEqual(groups[0].items.map((item) => item.displayId), ["alpha", "beta"]);
+});
+
+test("filterInstalled includes selected and lock-recorded items", () => {
+  const items = [
+    owned({}),
+    item({ id: "template:beta", displayId: "beta", installed: true, status: "ok" }),
+  ];
+  assert.deepEqual(logic.filterInstalled(items, filters).map((i) => i.displayId), ["alpha", "beta"]);
 });
 
 test("filterInstalled filters by kind, source, query and health", () => {

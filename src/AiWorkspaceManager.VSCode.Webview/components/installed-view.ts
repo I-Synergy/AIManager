@@ -157,7 +157,7 @@ export class InstalledView extends LitElement {
         hint="Open Presets to install a curated set, or Browse to pick items one by one."></empty-state>`;
     }
 
-    const installed = browse.items.filter((item) => item.selected);
+    const installed = browse.items.filter((item) => item.selected || item.installed);
     if (installed.length === 0) {
       return html`
         <empty-state heading="Nothing installed in this repository"
@@ -256,7 +256,7 @@ export class InstalledView extends LitElement {
   private renderFilters(count: number) {
     const items = store.browse?.items ?? [];
     const sources = ["all", ...new Set(
-      items.filter((item) => item.selected).map((item) => item.source))];
+      items.filter((item) => item.selected || item.installed).map((item) => item.source))];
     const filtering = store.installedQuery !== "" || store.installedKind !== "all"
       || store.installedState !== "all" || store.installedSource !== "all";
 

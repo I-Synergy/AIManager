@@ -248,8 +248,12 @@ public sealed class WorkspaceQueries
             var target = paths.TargetPath(item.Kind, item.Name);
             var entry = locked.GetValueOrDefault(key);
             var isSelected = selectedKeys.Contains(key);
+            var isRecorded = entry is not null;
 
-            var state = isSelected
+            // A lock entry is physical installed state even when the manifest no longer selects
+            // it (for example after a selection was cleared or an item was deselected): show it
+            // as installed instead of pretending it is an untouched catalog row.
+            var state = isSelected || isRecorded
                 ? StatusEvaluator.Evaluate(item.Kind, item, target, entry, sameDirectory)
                 : ItemStatus.Available;
             if (isSelected && frozen.Contains(item.Id) && state is
@@ -302,7 +306,7 @@ public sealed class WorkspaceQueries
                 requiredBy.GetValueOrDefault(key)?.OrderBy(id => id, StringComparer.Ordinal).ToList() ?? [],
                 isSelected,
                 state,
-                exists && isSelected,
+                exists && (isSelected || isRecorded),
                 frozen.Contains(item.Id),
                 localModified,
                 moved));
@@ -353,6 +357,19 @@ public sealed class WorkspaceQueries
         var cachedIndex = BuildIndex(manifest);
         var cachedByKey = cachedIndex.ByKey();
         var selected = Engine(cachedIndex).EffectiveSelection(manifest, strict: false);
+        var lockDocument = LoadLock();
+        var lockByKey = lockDocument.ByKey();
+        var selectedKeys = selected.ToHashSet();
+        // A lock entry is installed even when the manifest no longer selects it; include it in
+        // the update check instead of showing an Updates badge with an empty overview.
+        foreach (var key in lockByKey.Keys)
+        {
+            if (selectedKeys.Add(key))
+            {
+                selected.Add(key);
+            }
+        }
+
         var selectedSources = selected
             .Select(entry => cachedByKey.TryGetValue(entry, out var item) ? item.Source : ResolverDefaults.TemplateSource)
             .ToHashSet(StringComparer.Ordinal);
@@ -375,8 +392,7 @@ public sealed class WorkspaceQueries
                 && SourceCatalog.IsRemote(sourceEntry.Entry);
         });
 
-        var lockDocument = LoadLock();
-        var locked = lockDocument.ByKey();
+        var locked = lockByKey;
         var mode = MaterializeMode(manifest);
         var wanted = ids is null
             ? new HashSet<string>(StringComparer.Ordinal)

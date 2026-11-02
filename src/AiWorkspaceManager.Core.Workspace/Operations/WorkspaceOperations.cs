@@ -774,6 +774,16 @@ public sealed class WorkspaceOperations
         var indexByKey = index.ByKey();
         var engine = queries.Engine(index);
         var selected = engine.EffectiveSelection(manifest, strict: false);
+        var hasExistingSelection = ResolverDefaults.Kinds.Any(kind =>
+            manifest.GetStringArray(ResolverDefaults.ManifestKeys[kind]).Count > 0);
+        var hasLockEntries = queries.LoadLock().Entries.Count > 0;
+        if (selected.Count == 0 && (hasExistingSelection || hasLockEntries))
+        {
+            throw new ResolverException(
+                "refusing to pin with an empty selection — the catalog did not resolve the "
+                + "items this repository already has; run 'catalog.py index' and check the manifest");
+        }
+
         var wasLocalTree = WorkspacePaths.SamePath(queries.Sources.TemplateRoot(manifest), queries.Paths.Root);
         var lists = ResolverDefaults.Kinds.ToDictionary(
             kind => kind,
