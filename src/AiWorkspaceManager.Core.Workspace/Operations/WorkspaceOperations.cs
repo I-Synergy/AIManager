@@ -370,7 +370,27 @@ public sealed class WorkspaceOperations
         var index = queries.BuildIndex(manifest);
         var indexByKey = index.ByKey();
         var engine = queries.Engine(index);
-        var selected = engine.EffectiveSelection(manifest, strict: true);
+        // A repository can carry skills that were added by hand: they are not part of any
+        // declared source, but they are already on disk and are intentionally in the manifest.
+        // Keep them out of the resolver instead of failing the whole sync when another item is
+        // installed; only an id with no local files is treated as a typo.
+        var selected = engine.EffectiveSelection(manifest, strict: false);
+        foreach (var (kind, itemId) in selected)
+        {
+            if (indexByKey.ContainsKey((kind, itemId)))
+            {
+                continue;
+            }
+
+            var target = queries.Paths.TargetPath(kind, ItemId.Split(itemId).Name);
+            if (!PathOps.ExistsOrLink(target))
+            {
+                throw new ResolverException(
+                    $"unknown id '{ItemId.Display(itemId)}' — not in the catalog "
+                    + "(run 'catalog.py index' if the tree changed)");
+            }
+        }
+
         engine.CheckHookGate(manifest, selected, queries.Sources, queries.Paths);
 
         var lockDocument = queries.LoadLock();

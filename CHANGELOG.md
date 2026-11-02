@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Hand-added skills no longer block sync.** A manifest entry that is not in any declared source but already exists on disk (for example `.ai/skills/ayah-translator`) is left untouched when another item is installed. An unknown id with no local files still fails, so typos are not hidden.
 - **Lock-recorded items stay visible when the manifest selection is empty.** Browse and Installed now treat a `.ai/ai.lock.json` entry as installed even when `ai.json` no longer lists it, so files that are already on disk no longer disappear from the Installed view. `pin` also refuses to write an empty selection over an existing one or over lock entries, preventing an upgrade from silently clearing the selection.
 
 - **The Updates tab only refreshes the sources it needs.** It first reads the cached index to find the selected items, then refreshes just those sources. A refresh now runs `git fetch --depth 1` in the existing checkout instead of deleting it and cloning again, so a moving branch pays for changed objects only. Progress is logged at info level (`core → getUpdates`, `refreshing <source>`, `catalog index: …`, `update plan: …`), which makes a slow remote visible in the **AI Workspace Manager** output channel.
