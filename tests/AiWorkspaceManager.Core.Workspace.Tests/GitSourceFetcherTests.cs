@@ -103,6 +103,8 @@ public sealed class GitSourceFetcherTests
         var fetcher = Subject(temp);
         var checkout = fetcher.Fetch("template", Uri(repo), "main", refresh: false);
         Assert.IsFalse(File.Exists(Path.Combine(checkout, "new.txt")));
+        // A refresh reuses the checkout; an untracked marker proves it was not re-cloned.
+        File.WriteAllText(Path.Combine(checkout, "cache-marker.txt"), "keep\n");
 
         File.WriteAllText(Path.Combine(repo, "new.txt"), "new\n");
         Git(repo, "add", "-A");
@@ -111,6 +113,7 @@ public sealed class GitSourceFetcherTests
         var refreshed = fetcher.Fetch("template", Uri(repo), "main", refresh: true);
 
         Assert.IsTrue(File.Exists(Path.Combine(refreshed, "new.txt")));
+        Assert.IsTrue(File.Exists(Path.Combine(refreshed, "cache-marker.txt")));
     }
 
     [TestMethod]

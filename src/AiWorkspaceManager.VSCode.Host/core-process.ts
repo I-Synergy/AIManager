@@ -58,7 +58,7 @@ export async function CallAsync<T>(
       CATALOG_TOOLING: nodePath.join(extensionPath!, "tooling"),
     },
     requestTimeoutMs: RPC_TIMEOUT_MS,
-    onStderr: (line) => log?.debug(`[core] ${line}`),
+    onStderr: (line) => log?.info(`[core] ${line}`),
   });
 
   return client.CallAsync<T>(method, params, signal);

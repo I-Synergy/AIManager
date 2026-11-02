@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json.Nodes;
 using AiWorkspaceManager.Common;
 using AiWorkspaceManager.Core.Catalog;
@@ -171,9 +172,21 @@ public sealed class WorkspaceQueries
 
     public PresetCatalog Presets => presets ??= LoadPresetFile();
 
-    public CatalogIndex BuildIndex(ManifestDocument manifest, bool refresh = false) =>
-        new CatalogIndexBuilder(sources.ToCatalogSources(manifest, refresh), Categories, Console.Error.WriteLine)
-            .Build();
+    public CatalogIndex BuildIndex(
+        ManifestDocument manifest,
+        bool refresh = false,
+        IReadOnlySet<string>? onlySources = null)
+    {
+        var catalogSources = sources.ToCatalogSources(manifest, refresh, onlySources);
+        var started = Stopwatch.GetTimestamp();
+        Console.Error.WriteLine(
+            $"building catalog index from {catalogSources.Count} source(s) (refresh={refresh}) ...");
+        var index = new CatalogIndexBuilder(catalogSources, Categories, Console.Error.WriteLine).Build();
+        Console.Error.WriteLine(
+            $"catalog index: {index.Items.Count} item(s) in "
+            + $"{Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms");
+        return index;
+    }
 
     public SelectionEngine Engine(CatalogIndex index) => new(index.ByKey(), Presets);
 
@@ -331,11 +344,24 @@ public sealed class WorkspaceQueries
 
     public UpdatePlan PlanUpdates(IReadOnlyCollection<string>? ids = null, bool force = false)
     {
+        Console.Error.WriteLine("checking upstream ...");
+        var started = Stopwatch.GetTimestamp();
         var manifest = ManifestOrStarter();
-        var index = BuildIndex(manifest, refresh: true);
+        // First read the cached index to find what is selected; then refresh only the sources
+        // those selected items come from. Refreshing every declared source made the Updates tab
+        // re-download large unselected catalogs.
+        var cachedIndex = BuildIndex(manifest);
+        var cachedByKey = cachedIndex.ByKey();
+        var selected = Engine(cachedIndex).EffectiveSelection(manifest, strict: false);
+        var selectedSources = selected
+            .Select(entry => cachedByKey.TryGetValue(entry, out var item) ? item.Source : ResolverDefaults.TemplateSource)
+            .ToHashSet(StringComparer.Ordinal);
+        Console.Error.WriteLine(
+            $"refreshing {selectedSources.Count} selected source(s): "
+            + string.Join(", ", selectedSources.OrderBy(name => name, StringComparer.Ordinal)));
+        var index = BuildIndex(manifest, refresh: true, onlySources: selectedSources);
         var indexByKey = index.ByKey();
         var engine = Engine(index);
-        var selected = engine.EffectiveSelection(manifest, strict: false);
         var declaredSources = SourceCatalog.Sources(manifest).ToDictionary(source => source.Name, StringComparer.Ordinal);
 
         engine.CheckHookGate(manifest, selected, sources, paths);
@@ -393,7 +419,7 @@ public sealed class WorkspaceQueries
             .ToList();
         var chosen = ready.Concat(force ? blocked : []).ToList();
 
-        return new UpdatePlan(
+        var plan = new UpdatePlan(
             manifest,
             index,
             indexByKey,
@@ -408,6 +434,10 @@ public sealed class WorkspaceQueries
             chosen,
             remoteSelected,
             declaredSources.Values.Any(source => SourceCatalog.IsRemote(source.Entry)));
+        Console.Error.WriteLine(
+            $"update plan: {ready.Count} ready, {blocked.Count} blocked, {held.Count} locked in "
+            + $"{Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms");
+        return plan;
     }
 
     public UpdatePayload Updates(IReadOnlyCollection<string>? ids = null, bool force = false)

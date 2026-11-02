@@ -35,20 +35,49 @@ public sealed partial class GitSourceFetcher : ISourceFetcher
         }
 
         var target = CacheDirectory(repo, reference);
-        if (Directory.Exists(target) && refresh)
-        {
-            ForceRemoveTree(target);
-        }
-
-        if (Directory.Exists(target) && Directory.EnumerateFileSystemEntries(target).Any())
+        var hasCache = Directory.Exists(target) && Directory.EnumerateFileSystemEntries(target).Any();
+        if (hasCache && !refresh)
         {
             return target;
         }
 
+        if (hasCache)
+        {
+            // Refresh in place: a shallow fetch downloads only the changed objects. Deleting and
+            // cloning again made every "check for updates" pay the full repository download.
+            Console.Error.WriteLine($"refreshing {name} @ {reference} ...");
+            var started = Stopwatch.GetTimestamp();
+            var fetch = Run(
+                "git",
+                ["-C", target, "fetch", "--quiet", "--depth", "1", "origin", reference],
+                timeoutMs: 120_000);
+            if (fetch.Code == 0)
+            {
+                var checkout = Run(
+                    "git",
+                    ["-C", target, "checkout", "--quiet", "--force", "FETCH_HEAD"],
+                    timeoutMs: 30_000);
+                if (checkout.Code == 0)
+                {
+                    Console.Error.WriteLine(
+                        $"refreshed {name} @ {reference} in "
+                        + $"{Stopwatch.GetElapsedTime(started).TotalMilliseconds:F0} ms");
+                    return target;
+                }
+            }
+
+            Console.Error.WriteLine($"refresh of {name} failed; cloning again ...");
+            ForceRemoveTree(target);
+        }
+
         Console.Error.WriteLine($"fetching {name} @ {reference} ...");
+        var cloneStarted = Stopwatch.GetTimestamp();
         var clone = Run("git", ["clone", "--quiet", "--depth", "1", "--branch", reference, url, target]);
         if (clone.Code == 0)
         {
+            Console.Error.WriteLine(
+                $"fetched {name} @ {reference} in "
+                + $"{Stopwatch.GetElapsedTime(cloneStarted).TotalMilliseconds:F0} ms");
             return target;
         }
 
@@ -91,6 +120,8 @@ public sealed partial class GitSourceFetcher : ISourceFetcher
             return (null, "offline");
         }
 
+        Console.Error.WriteLine($"reading tags for {repo} ...");
+        var started = Stopwatch.GetTimestamp();
         var done = Run("git", ["ls-remote", "--tags", "--refs", url], timeoutMs: TagTimeoutMs);
         if (done.Code != 0)
         {

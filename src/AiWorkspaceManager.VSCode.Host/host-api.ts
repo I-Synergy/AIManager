@@ -50,7 +50,16 @@ export function createHostAPI(context: HostApiContext): HostAPI {
     if (wait && context.ready) {
       await context.ready;
     }
-    return CallAsync<T>(method, { root: root(), ...params });
+    const started = Date.now();
+    context.log?.info(`core → ${method}`);
+    try {
+      const value = await CallAsync<T>(method, { root: root(), ...params });
+      context.log?.info(`core ← ${method} (${Date.now() - started} ms)`);
+      return value;
+    } catch (error) {
+      context.log?.error(`core ✗ ${method} after ${Date.now() - started} ms: ${String(error)}`);
+      throw error;
+    }
   };
 
   const exists = (path: string): Promise<boolean> =>

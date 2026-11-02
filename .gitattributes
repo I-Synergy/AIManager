@@ -3,3 +3,4 @@
 # fails on CI (Windows working trees use CRLF by default).
 tooling/** text eol=lf
 scripts/** text eol=lf
+tests/**/Fixtures/** text eol=lf

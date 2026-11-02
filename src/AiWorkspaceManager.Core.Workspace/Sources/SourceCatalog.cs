@@ -111,11 +111,19 @@ public sealed class SourceCatalog
             ? text
             : ResolverDefaults.LocalRef;
 
-    public IReadOnlyList<CatalogSource> ToCatalogSources(ManifestDocument manifest, bool refresh = false)
+    public IReadOnlyList<CatalogSource> ToCatalogSources(
+        ManifestDocument manifest,
+        bool refresh = false,
+        IReadOnlySet<string>? onlySources = null)
     {
         var result = new List<CatalogSource>();
         foreach (var (name, entry) in Sources(manifest))
         {
+            if (onlySources is not null && !onlySources.Contains(name))
+            {
+                continue;
+            }
+
             var root = SourceRoot(name, entry, refresh);
             result.Add(new CatalogSource(
                 name,
