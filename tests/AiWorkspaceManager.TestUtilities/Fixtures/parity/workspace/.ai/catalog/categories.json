@@ -1,0 +1,14 @@
+{
+  "categories": [
+    { "id": "architecture", "label": "Architecture", "description": "Design and structure" },
+    { "id": "testing", "label": "Testing", "description": "Tests and quality" },
+    { "id": "docs", "label": "Documentation", "description": "Written material" },
+    { "id": "uncategorised", "label": "I-Synergy", "description": "Everything else" },
+    { "id": "labs", "label": "Labs", "description": "Imported from labs" },
+    { "id": "copilot", "label": "Copilot", "description": "Imported from awesome-copilot" }
+  ],
+  "sources": {
+    "labs": { "category": "labs" },
+    "awesome-copilot": { "category": "copilot" }
+  }
+}

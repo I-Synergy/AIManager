@@ -1,0 +1,53 @@
+{
+  "lockVersion": 1,
+  "resolved": [
+    {
+      "id": "template:lead",
+      "kind": "agent",
+      "source": "template",
+      "ref": "v1",
+      "path": ".ai/agents/lead.md",
+      "sha256": "292d917bd629a0b34d8067f5209358b3406a57bfafac87b6ac84a456fd04ec58",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/agents/lead.agent.md",
+      "materialize": "copy"
+    },
+    {
+      "id": "template:style",
+      "kind": "instruction",
+      "source": "template",
+      "ref": "v1",
+      "path": ".ai/instructions/style.instructions.md",
+      "sha256": "b407a77ebab669c51e94e0dd1ecfc6205973e663e8d6a690e45c829b020d7fe6",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/instructions/style.instructions.md",
+      "materialize": "copy"
+    },
+    {
+      "id": "template:alpha",
+      "kind": "skill",
+      "source": "template",
+      "ref": "v1",
+      "path": ".ai/skills/alpha",
+      "sha256": "9fa2f2f145b5e6673be190adc62a08665faedae9c0fc9a36afbde244b8abc302",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/skills/alpha",
+      "materialize": "copy"
+    },
+    {
+      "id": "template:beta",
+      "kind": "skill",
+      "source": "template",
+      "ref": "v1",
+      "path": ".ai/skills/beta",
+      "sha256": "6f49641ef1ea98e8142aa53019fd1274cb7e242ff33c6c4f76b986cddb52254b",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/skills/beta",
+      "materialize": "copy"
+    }
+  ]
+}

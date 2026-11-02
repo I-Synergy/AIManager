@@ -1,0 +1,74 @@
+{
+  "command": "status",
+  "source": {
+    "id": "template",
+    "root": "D:\\Projects\\Github\\AIWorkspaceManager\\tests\\AiWorkspaceManager.TestUtilities\\Fixtures\\parity\\template",
+    "ref": "v1",
+    "sameDir": false
+  },
+  "items": [
+    {
+      "id": "template:beta",
+      "kind": "skill",
+      "path": ".ai/skills/beta",
+      "status": "not-installed",
+      "upstream": "unchanged",
+      "selected": true,
+      "materialize": "copy"
+    },
+    {
+      "id": "template:alpha",
+      "kind": "skill",
+      "path": ".ai/skills/alpha",
+      "status": "ok",
+      "upstream": "unchanged",
+      "selected": true,
+      "materialize": "copy"
+    },
+    {
+      "id": "awesome-copilot:delta",
+      "kind": "skill",
+      "path": ".ai/skills/delta",
+      "status": "not-installed",
+      "upstream": "unchanged",
+      "selected": true,
+      "materialize": "copy"
+    },
+    {
+      "id": "template:lead",
+      "kind": "agent",
+      "path": ".ai/agents/lead.md",
+      "status": "ok",
+      "upstream": "unchanged",
+      "selected": true,
+      "materialize": "copy"
+    },
+    {
+      "id": "template:style",
+      "kind": "instruction",
+      "path": ".ai/instructions/style.instructions.md",
+      "status": "not-installed",
+      "upstream": "unchanged",
+      "selected": true,
+      "materialize": "copy"
+    },
+    {
+      "id": "template:review",
+      "kind": "prompt",
+      "path": ".ai/prompts/review.prompt.md",
+      "status": "not-installed",
+      "upstream": "unchanged",
+      "selected": true,
+      "materialize": "copy"
+    },
+    {
+      "id": "template:demo",
+      "kind": "plugin",
+      "path": ".ai/plugins/demo",
+      "status": "not-installed",
+      "upstream": "unchanged",
+      "selected": true,
+      "materialize": "copy"
+    }
+  ]
+}

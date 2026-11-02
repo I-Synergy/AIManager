@@ -1,0 +1,66 @@
+{
+  "command": "update",
+  "applied": false,
+  "dryRun": true,
+  "ready": [
+    {
+      "id": "template:beta",
+      "displayId": "beta",
+      "kind": "skill",
+      "status": "not-installed",
+      "locked": false,
+      "path": ".ai/skills/beta",
+      "source": "template"
+    },
+    {
+      "id": "awesome-copilot:delta",
+      "displayId": "awesome-copilot:delta",
+      "kind": "skill",
+      "status": "not-installed",
+      "locked": false,
+      "path": ".ai/skills/delta",
+      "source": "awesome-copilot"
+    },
+    {
+      "id": "template:style",
+      "displayId": "style",
+      "kind": "instruction",
+      "status": "not-installed",
+      "locked": false,
+      "path": ".ai/instructions/style.instructions.md",
+      "source": "template"
+    },
+    {
+      "id": "template:review",
+      "displayId": "review",
+      "kind": "prompt",
+      "status": "not-installed",
+      "locked": false,
+      "path": ".ai/prompts/review.prompt.md",
+      "source": "template"
+    },
+    {
+      "id": "template:demo",
+      "displayId": "demo",
+      "kind": "plugin",
+      "status": "not-installed",
+      "locked": false,
+      "path": ".ai/plugins/demo",
+      "source": "template"
+    }
+  ],
+  "blocked": [],
+  "locked": [
+    {
+      "id": "template:alpha",
+      "displayId": "alpha",
+      "kind": "skill",
+      "status": "ok",
+      "locked": true,
+      "path": ".ai/skills/alpha",
+      "source": "template"
+    }
+  ],
+  "remoteSelected": false,
+  "remote": false
+}

@@ -1,0 +1,36 @@
+{
+  "command": "presets",
+  "current": "Minimal",
+  "active": [
+    "Minimal"
+  ],
+  "presets": [
+    {
+      "name": "Minimal",
+      "description": "Small baseline",
+      "skills": 2,
+      "agents": 1,
+      "ids": [
+        "template:beta",
+        "template:alpha",
+        "template:lead"
+      ],
+      "recommended": false
+    },
+    {
+      "name": "Everything",
+      "description": "Everything in the catalog",
+      "skills": 4,
+      "agents": 2,
+      "ids": [
+        "awesome-copilot:delta",
+        "labs:gamma",
+        "template:beta",
+        "template:alpha",
+        "labs:review",
+        "template:lead"
+      ],
+      "recommended": false
+    }
+  ]
+}

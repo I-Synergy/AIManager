@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Shared constants, ids and path helpers. No logic that a domain project owns. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>AiWorkspaceManager.Common</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AiWorkspaceManager.Common.Tests" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Catalog" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Catalog.Tests" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Workspace" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Workspace.Tests" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Tests" />
+  </ItemGroup>
+
+</Project>

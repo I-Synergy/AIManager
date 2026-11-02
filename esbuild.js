@@ -15,7 +15,7 @@ const extensionConfig = {
   ...base,
   platform: "node",
   format: "cjs",
-  entryPoints: ["./src/host/extension.ts"],
+  entryPoints: ["./src/AiWorkspaceManager.VSCode.Host/extension.ts"],
   outfile: "./dist/extension.js",
   external: ["vscode"],
 };
@@ -25,13 +25,13 @@ const webConfig = {
   platform: "browser",
   target: "es2021",
   format: "esm",
-  entryPoints: ["./src/web/main.ts"],
+  entryPoints: ["./src/AiWorkspaceManager.VSCode.Webview/main.ts"],
   outfile: "./dist/web.js",
 };
 
 const cssConfig = {
   ...base,
-  entryPoints: ["./src/web/main.css"],
+  entryPoints: ["./src/AiWorkspaceManager.VSCode.Webview/main.css"],
   outfile: "./dist/web.css",
   minify: true,
 };

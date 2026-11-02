@@ -1,7 +1,7 @@
 {
   "name": "aiworkspacemanager",
   "displayName": "AI Workspace Manager for Visual Studio Code",
-  "description": "Browse, install, update and prune the skills and agents each repository installs — a full-page front-end for .ai/scripts/catalog.py",
+  "description": "Browse, install, update and prune the skills and agents each repository installs \u2014 a full-page front-end for a bundled .NET resolver",
   "version": "0.13.2",
   "publisher": "I-Synergy",
   "license": "MIT",
@@ -43,7 +43,6 @@
   "activationEvents": [
     "onView:aiManager.launcher",
     "workspaceContains:.ai/ai.json",
-    "workspaceContains:.ai/scripts/catalog.py",
     "onWebviewPanel:aiManager.panel"
   ],
   "contributes": {
@@ -90,7 +89,7 @@
       },
       {
         "command": "aiManager.vendorTooling",
-        "title": "AI Workspace Manager: Vendor the Resolver Into This Repo",
+        "title": "AI Workspace Manager: Vendor the Vocabulary Into This Repo",
         "icon": "$(cloud-download)"
       }
     ],
@@ -141,28 +140,20 @@
           "group": "inline"
         }
       ]
-    },
-    "configuration": {
-      "title": "AI Workspace Manager",
-      "properties": {
-        "aiManager.pythonPath": {
-          "type": "string",
-          "default": "python",
-          "description": "Interpreter used to run .ai/scripts/catalog.py."
-        }
-      }
     }
   },
   "scripts": {
     "build": "node scripts/sync-tooling.mjs && node esbuild.js",
-    "vscode:prepublish": "npm run build",
+    "vscode:prepublish": "npm run build && npm run build:core",
     "compile": "tsc -p . --noEmit",
     "watch": "node esbuild.js --watch",
     "dev": "node esbuild.js && node tools/dev-server.mjs",
-    "test": "tsc -p tsconfig.test.json && node --test test/logic.test.js",
-    "test:resolver": "python -m pytest test/resolver -q",
+    "test": "tsc -p tsconfig.test.json && node --test tests/logic.test.js tests/core-params.test.js tests/core-client.test.js",
     "package": "npm run build && npx --yes --ignore-scripts @vscode/vsce package --no-dependencies --out releases/",
-    "sync-tooling": "node scripts/sync-tooling.mjs"
+    "sync-tooling": "node scripts/sync-tooling.mjs",
+    "build:core": "dotnet publish src/AiWorkspaceManager.Core/AiWorkspaceManager.Core.csproj -c Release -o dist/core",
+    "test:core": "dotnet test AIWorkspaceManager.slnx -c Release",
+    "quality": "npm run compile && npm test && npm run build:core && npm run test:core"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

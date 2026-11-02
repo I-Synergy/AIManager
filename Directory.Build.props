@@ -1,0 +1,40 @@
+<Project>
+
+  <!--
+    Root build policy for every sidecar project. The projects are under `src/` and `tests/`,
+    so the file is discovered from the repository root; do not repeat these settings in a
+    .csproj — one edit must change the policy everywhere.
+
+    `Fixtures` trees are inputs the extension evaluates, not projects of this solution; they
+    opt out by path segment so they keep their own settings.
+  -->
+  <PropertyGroup>
+    <IsSidecarProject>true</IsSidecarProject>
+    <IsSidecarProject Condition="$([System.String]::Copy('$(MSBuildProjectFullPath)').Replace('\','/').Contains('/Fixtures/'))">false</IsSidecarProject>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsSidecarProject)' == 'true'">
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Rules enforced by the compiler, not by review. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+
+    <!-- Framework-dependent sidecar: one build serves every OS/arch; RollForward lets the
+         newest installed runtime execute it, matching the extension's runtime policy. -->
+    <RollForward>LatestMajor</RollForward>
+
+    <Deterministic>true</Deterministic>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <!-- GenerateDocumentationFile is required for IDE0005 during build. CS1591 is disabled:
+         not every public member needs an XML comment. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+</Project>
