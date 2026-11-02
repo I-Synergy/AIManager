@@ -378,4 +378,26 @@ public sealed class WorkspaceOperationsTests
         var error = Assert.ThrowsExactly<ResolverException>(() => operations.Pin("v2"));
         StringAssert.Contains(error.Message, "refusing to pin with an empty selection");
     }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void Sync_KeepsAHandAddedSkillThatIsNotInAnySource()
+    {
+        var (temp, paths, operations) = SyncScenario();
+        using var scope = temp;
+        temp.Write("workspace/.ai/skills/manual/SKILL.md", "---\nname: manual\n---\n");
+        var manifestPath = paths.ManifestPath;
+        File.WriteAllText(
+            manifestPath,
+            File.ReadAllText(manifestPath).Replace(
+                "\"skills\": [\"alpha\", \"beta\"]",
+                "\"skills\": [\"manual\", \"alpha\", \"beta\"]",
+                StringComparison.Ordinal));
+
+        var outcome = operations.Sync();
+
+        Assert.AreEqual(0, outcome.Result.Code);
+        Assert.IsTrue(File.Exists(Path.Combine(paths.Root, ".ai", "skills", "manual", "SKILL.md")));
+        Assert.IsFalse(File.ReadAllText(paths.LockPath).Contains("manual", StringComparison.Ordinal));
+    }
 }
