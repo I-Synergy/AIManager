@@ -7,7 +7,7 @@ bin/
 obj/
 TestResults/
 out-test/
-releases/
+/releases/
 *.vsix
 .tooling-staging/
 
