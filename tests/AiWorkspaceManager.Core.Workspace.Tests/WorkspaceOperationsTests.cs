@@ -358,4 +358,24 @@ public sealed class WorkspaceOperationsTests
         Assert.AreEqual(0, operations.Remove(["alpha"], force: true).Result.Code);
         Assert.IsFalse(operations.Queries.LoadManifest()!.GetStringArray("skills").Contains("alpha"));
     }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void Pin_RefusesToEraseAnExistingSelectionWhenTheCatalogResolvesNothing()
+    {
+        var (temp, _, operations) = SyncScenario();
+        using var scope = temp;
+        Assert.AreEqual(0, operations.Sync().Result.Code);
+        var manifest = operations.Queries.LoadManifest()!;
+        foreach (var key in new[] { "skills", "agents", "instructions", "prompts", "plugins", "hooks", "presets" })
+        {
+            manifest.Set(key, new System.Text.Json.Nodes.JsonArray());
+        }
+
+        manifest.Remove("preset");
+        manifest.Save();
+
+        var error = Assert.ThrowsExactly<ResolverException>(() => operations.Pin("v2"));
+        StringAssert.Contains(error.Message, "refusing to pin with an empty selection");
+    }
 }

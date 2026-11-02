@@ -113,4 +113,64 @@ public sealed class WorkspaceQueriesTests
 
         public (IReadOnlyList<string>? Tags, string? Error) RemoteTags(string repo) => (null, "offline");
     }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void Browse_ShowsLockRecordedItemsThatTheManifestNoLongerSelects()
+    {
+        using var temp = new TempDirectory();
+        temp.CopyFixture(TestPaths.ParityRoot);
+        var root = Path.Combine(temp.Root, "workspace");
+        var manifestPath = Path.Combine(root, ".ai", "ai.json");
+        var manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+        foreach (var key in new[] { "skills", "agents", "instructions", "prompts", "plugins", "hooks", "presets" })
+        {
+            manifest[key] = new JsonArray();
+        }
+
+        manifest.Remove("preset");
+
+        File.WriteAllText(manifestPath, manifest.ToJsonString());
+        var queries = new WorkspaceQueries(
+            new WorkspacePaths(root),
+            new StubFetcher(),
+            offline: true);
+        var payload = queries.Browse();
+
+        Assert.AreEqual(0, payload.Summary.Selected);
+        Assert.AreEqual(2, payload.Summary.Installed);
+        var alpha = payload.Items.Single(item => item.Id == "template:alpha");
+        Assert.IsFalse(alpha.Selected);
+        Assert.IsTrue(alpha.Installed);
+        Assert.AreEqual("ok", alpha.Status);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void Updates_IncludesLockRecordedItemsWhenTheManifestHasNoSelection()
+    {
+        using var temp = new TempDirectory();
+        temp.CopyFixture(TestPaths.ParityRoot);
+        var root = Path.Combine(temp.Root, "workspace");
+        var manifestPath = Path.Combine(root, ".ai", "ai.json");
+        var manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+        foreach (var key in new[] { "skills", "agents", "instructions", "prompts", "plugins", "hooks", "presets" })
+        {
+            manifest[key] = new JsonArray();
+        }
+
+        manifest.Remove("preset");
+        File.WriteAllText(manifestPath, manifest.ToJsonString());
+        var queries = new WorkspaceQueries(
+            new WorkspacePaths(root),
+            new StubFetcher(),
+            offline: true);
+
+        var plan = queries.PlanUpdates();
+
+        Assert.AreEqual(2, plan.Rows.Count);
+        CollectionAssert.AreEquivalent(
+            new[] { "template:alpha", "template:lead" },
+            plan.Rows.Select(row => row.Id).ToArray());
+    }
 }
