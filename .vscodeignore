@@ -1,6 +1,14 @@
 src/**
+.ai/**
 test/**
+tests/**
 tools/**
+**/bin/**
+**/obj/**
+*.slnx
+Directory.Build.props
+Directory.Packages.props
+.editorconfig
 out-test/**
 node_modules/**
 releases/**
@@ -22,9 +30,10 @@ images/social-preview.png
 # Workspace, test and agent noise that must never ship
 .gitignore
 social.md
+todo.md
 tmp/**
 .pytest_cache/**
 .reasonix/**
 **/__pycache__/**
 .tooling-staging/**
-scripts/sync-tooling.mjs
+scripts/**

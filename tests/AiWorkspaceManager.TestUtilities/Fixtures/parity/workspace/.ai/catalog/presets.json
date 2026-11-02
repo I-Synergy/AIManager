@@ -1,0 +1,14 @@
+{
+  "presets": {
+    "Minimal": {
+      "description": "Small baseline",
+      "skills": ["alpha"],
+      "agents": ["lead"]
+    },
+    "Everything": {
+      "description": "Everything in the catalog",
+      "skills": [{ "all": true }],
+      "agents": [{ "all": true }]
+    }
+  }
+}

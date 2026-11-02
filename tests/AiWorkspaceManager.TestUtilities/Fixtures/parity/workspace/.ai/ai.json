@@ -1,0 +1,39 @@
+{
+  "$schema": "catalog/schemas/ai.schema.json",
+  "version": 1,
+  "clients": ["claude"],
+  "sources": {
+    "template": { "repo": "I-Synergy/AI", "ref": "v1", "resolve": "local", "path": "../template" },
+    "labs": {
+      "repo": "example/labs",
+      "ref": "main",
+      "resolve": "local",
+      "path": "../labs",
+      "license": "MIT",
+      "paths": {
+        "skill": ["plugins/one/skills"],
+        "agent": [".github/agents"],
+        "instruction": [],
+        "plugin": [],
+        "hook": []
+      }
+    },
+    "awesome-copilot": {
+      "repo": "github/awesome-copilot",
+      "ref": "main",
+      "resolve": "local",
+      "path": "../awesome",
+      "license": "MIT"
+    }
+  },
+  "presets": ["Minimal"],
+  "skills": ["alpha", "awesome-copilot:delta"],
+  "agents": ["lead"],
+  "instructions": ["style"],
+  "prompts": ["review"],
+  "plugins": ["demo"],
+  "hooks": [],
+  "materialize": "copy",
+  "exclude": [],
+  "locked": ["alpha"]
+}

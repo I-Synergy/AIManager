@@ -1,0 +1,27 @@
+<Project>
+
+  <!--
+    Central package versions. Every PackageReference omits Version; the version lives here.
+    `Fixtures` trees opt out because they are inputs the extension evaluates, not projects.
+  -->
+  <PropertyGroup>
+    <IsSidecarProject>true</IsSidecarProject>
+    <IsSidecarProject Condition="$([System.String]::Copy('$(MSBuildProjectFullPath)').Replace('\','/').Contains('/Fixtures/'))">false</IsSidecarProject>
+    <ManagePackageVersionsCentrally Condition="'$(IsSidecarProject)' == 'true'">true</ManagePackageVersionsCentrally>
+    <ManagePackageVersionsCentrally Condition="'$(IsSidecarProject)' != 'true'">false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsSidecarProject)' == 'true'">
+    <!-- Product packages: none. The resolver uses the BCL only (System.Text.Json, SHA-256,
+         Process, file system), which keeps the sidecar framework-dependent and trim-friendly
+         in principle without adding a third-party boundary. -->
+
+    <!-- Test stack: MSTest is the repository standard; xUnit and NUnit are forbidden. -->
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="Moq" Version="4.21.0" />
+    <PackageVersion Include="MSTest.TestAdapter" Version="4.5.2" />
+    <PackageVersion Include="MSTest.TestFramework" Version="4.5.2" />
+  </ItemGroup>
+
+</Project>

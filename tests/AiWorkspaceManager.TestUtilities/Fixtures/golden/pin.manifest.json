@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "sources": {
+    "template": {
+      "repo": "I-Synergy/AI",
+      "ref": "v2",
+      "resolve": "remote"
+    }
+  },
+  "skills": [
+    "alpha",
+    "beta"
+  ],
+  "agents": [],
+  "materialize": "copy",
+  "exclude": [],
+  "instructions": [],
+  "prompts": [],
+  "plugins": [],
+  "hooks": []
+}

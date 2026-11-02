@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Workspace semantics: manifest, lock, selection, status, materialisation, setup. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>AiWorkspaceManager.Core.Workspace</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AiWorkspaceManager.Common\AiWorkspaceManager.Common.csproj" />
+    <ProjectReference Include="..\AiWorkspaceManager.Core.Catalog\AiWorkspaceManager.Core.Catalog.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Workspace.Tests" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Tests" />
+  </ItemGroup>
+
+</Project>

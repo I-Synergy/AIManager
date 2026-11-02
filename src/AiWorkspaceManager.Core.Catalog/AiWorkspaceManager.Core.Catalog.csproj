@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Catalog model: frontmatter, hashing, index, classification, presets, semver. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>AiWorkspaceManager.Core.Catalog</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AiWorkspaceManager.Common\AiWorkspaceManager.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Catalog.Tests" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Workspace" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Workspace.Tests" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core" />
+    <InternalsVisibleTo Include="AiWorkspaceManager.Core.Tests" />
+  </ItemGroup>
+
+</Project>

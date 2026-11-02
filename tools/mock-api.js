@@ -13,7 +13,6 @@
     browse: undefined,
     presets: undefined,
     updates: undefined,
-    pythonPath: "python",
     adopted: false,
   };
 
@@ -71,7 +70,6 @@
         WorkspaceName: scenario === "empty" ? "new-project" : "AI",
         HasManifest: scenario !== "empty" || state.adopted,
         HasScript: true,
-        PythonPath: state.pythonPath,
         Materialize: browse.materialize,
         Version: "0.10.0",
       };
@@ -269,10 +267,6 @@
       return null;
     },
 
-    async setPythonPath(params) {
-      state.pythonPath = params.Value;
-      return null;
-    },
   };
 
   // The web layer creates the client before any request is made, so the fake

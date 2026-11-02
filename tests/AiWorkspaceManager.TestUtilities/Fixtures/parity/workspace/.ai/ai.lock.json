@@ -1,0 +1,29 @@
+{
+  "lockVersion": 1,
+  "resolved": [
+    {
+      "id": "template:alpha",
+      "kind": "skill",
+      "source": "template",
+      "ref": "v1",
+      "path": ".ai/skills/alpha",
+      "sha256": "f127ab7aed473765f57c957e901d39f8bcbc5853b91e4567d68eefda0c28ea1f",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/skills/alpha",
+      "materialize": "copy"
+    },
+    {
+      "id": "template:lead",
+      "kind": "agent",
+      "source": "template",
+      "ref": "v1",
+      "path": ".ai/agents/lead.md",
+      "sha256": "79880356a82eeafff20cfcd23ffb82e7a4f212febf02bbd72319f922ba6acb25",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/agents/lead.agent.md",
+      "materialize": "copy"
+    }
+  ]
+}

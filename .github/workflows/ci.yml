@@ -37,11 +37,6 @@ jobs:
         with:
           node-version: lts/*
 
-      - name: Install Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: "3.12"
-
       - name: Resolve build number
         id: build
         shell: bash
@@ -95,10 +90,13 @@ jobs:
       - name: Extension tests
         run: npm test
 
-      - name: Resolver tests
+      - name: .NET SDK
+        run: dotnet --info
+
+      - name: C# build and tests
         run: |
-          pip install --only-binary :all: --require-hashes -r requirements-dev.txt
-          npm run test:resolver
+          dotnet build AIWorkspaceManager.slnx -c Release
+          dotnet test AIWorkspaceManager.slnx -c Release --no-build
 
       - name: Build
         run: npm run build
@@ -109,8 +107,9 @@ jobs:
           npm run package
           SIZE=$(stat -c%s releases/aiworkspacemanager-*.vsix)
           echo "VSIX size: $SIZE bytes"
-          if [ "$SIZE" -gt 2097152 ]; then
-            echo "::error::VSIX exceeds 2 MB"
+          # The framework-dependent .NET core is ~4.5 MB; the extension itself is under 1 MB.
+          if [ "$SIZE" -gt 16777216 ]; then
+            echo "::error::VSIX exceeds 16 MB"
             exit 1
           fi
           cp releases/aiworkspacemanager-*.vsix aiworkspacemanager.vsix

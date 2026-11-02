@@ -1,20 +1,18 @@
 /**
- * Build-time: make sure the resolver's tooling is present in this extension's
- * `tooling/` folder, so the VSIX can install it into a repository that does not
- * have it.
+ * Build-time: make sure the vocabulary the .NET sidecar reads is present in this extension's
+ * `tooling/` folder, so the VSIX can install it into a repository that does not have it.
  *
  * Two modes, chosen by what is on disk:
  *
- *   1. A template checkout is available (`AI_TEMPLATE_ROOT`, or the legacy
- *      `../../.ai/scripts/catalog.py` when the extension lives inside the
- *      template repository). Its files are copied in, so the packaged copy
- *      always matches the scripts that shipped with that commit.
- *   2. No checkout: `tooling/` is the committed snapshot and is used as-is,
- *      after verifying every manifest entry is present. This is what makes the
- *      standalone repository buildable on a fresh clone.
+ *   1. A template checkout is available (`AI_TEMPLATE_ROOT`, or the legacy `../../catalog/`
+ *      when the extension lives inside the template repository). Its vocabulary is copied in, so
+ *      the packaged copy always matches the scripts that shipped with that commit.
+ *   2. No checkout: `tooling/` is the committed snapshot and is used as-is, after verifying every
+ *      manifest entry is present. This is what makes the standalone repository buildable on a
+ *      fresh clone.
  *
- * `npm run sync-tooling -- --check` verifies the snapshot without writing, which
- * is what CI runs.
+ * The resolver itself is the .NET core (`src/AiWorkspaceManager.Core`), not a Python script, so
+ * there are no `.ai/scripts/` files to collect.
  */
 import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -25,21 +23,7 @@ const EXTENSION = join(HERE, "..");
 const OUT = join(EXTENSION, "tooling");
 
 const FILES = [
-  // The resolver and the scripts it drives.
-  [".ai/scripts/catalog.py", ".ai/scripts/catalog.py"],
-  [".ai/scripts/sync-platforms.py", ".ai/scripts/sync-platforms.py"],
-  [".ai/scripts/sync-skills.py", ".ai/scripts/sync-skills.py"],
-  [".ai/scripts/sync-agents.py", ".ai/scripts/sync-agents.py"],
-  [".ai/scripts/upgrade-template.py", ".ai/scripts/upgrade-template.py"],
-  // Template maintenance scripts: a project that installs from the template
-  // should have the whole `.ai/scripts/` set, not only the resolver's helpers.
-  [".ai/scripts/hygiene-lint.py", ".ai/scripts/hygiene-lint.py"],
-  [".ai/scripts/migrate-to-ai.py", ".ai/scripts/migrate-to-ai.py"],
-  // A template-only check, shipped so the extension can correct a project
-  // whose pinned template predates the fix that makes it skip derived repos.
-  [".ai/tests/validate-release.py", ".ai/tests/validate-release.py"],
-  // Vocabulary, presets and schemas: without these a fresh repo has no
-  // categories and no presets to choose from.
+  // Vocabulary, presets and schemas: without these a fresh repo has no categories or presets.
   ["catalog/presets.json", "catalog/presets.json"],
   ["catalog/categories.json", "catalog/categories.json"],
   ["catalog/schemas/ai.schema.json", "catalog/schemas/ai.schema.json"],
@@ -61,13 +45,10 @@ async function templateRoot() {
   // The layout the extension had while it lived inside the template repo.
   candidates.push(join(EXTENSION, "..", ".."));
 
-  // The resolver may live only in this bundle (the template can drop it once
-  // the extension ships it), so any resolver sibling identifies a checkout.
   const checks = await Promise.all(candidates.map(async (candidate) => ({
     candidate,
-    found: await exists(join(candidate, ".ai", "scripts", "catalog.py"))
-      || await exists(join(candidate, ".ai", "scripts", "sync-platforms.py"))
-      || await exists(join(candidate, ".ai", "scripts", "sync-skills.py")),
+    found: await exists(join(candidate, "catalog", "presets.json"))
+      || await exists(join(candidate, ".ai", "catalog", "presets.json")),
   })));
   return checks.find((check) => check.found)?.candidate;
 }
@@ -82,12 +63,14 @@ async function copyFrom(root) {
     const destination = join(staging, to);
     await mkdir(dirname(destination), { recursive: true });
     const templatePath = join(root, from);
+    const nestedPath = join(root, ".ai", from);
     let fromSnapshot = false;
     if (await exists(templatePath)) {
       await cp(templatePath, destination);
+    } else if (await exists(nestedPath)) {
+      await cp(nestedPath, destination);
     } else if (await exists(join(OUT, ...to.split("/")))) {
-      // The template no longer ships this file (the resolver moved into the
-      // extension, for example). Keep the committed snapshot rather than
+      // The template no longer ships this file. Keep the committed snapshot rather than
       // producing an incomplete bundle.
       await cp(join(OUT, ...to.split("/")), destination);
       fromSnapshot = true;
@@ -182,7 +165,7 @@ async function main() {
   }
 
   // Standalone checkout: the snapshot is the source of truth. Verify rather
-  // than silently packaging an incomplete resolver.
+  // than silently packaging an incomplete vocabulary.
   await verifySnapshot();
   console.log("tooling: no template checkout found; using the committed snapshot "
     + "(set AI_TEMPLATE_ROOT to refresh it)");

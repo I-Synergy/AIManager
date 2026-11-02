@@ -1,0 +1,8 @@
+{
+  "name": "demo",
+  "description": "Demo plugin",
+  "extensions": {
+    "skills": ["skills/alpha"],
+    "agents": ["agents/lead.agent.md"]
+  }
+}

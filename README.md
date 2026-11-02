@@ -70,7 +70,7 @@ hashes, and updates that are a diff against a pinned revision.
 | **Installed** | What this repo has, grouped by state — needs attention first — and then by source, so it is clear which repository each item came from. Search and filter by kind / source / health (in sync, needs attention, not materialised), tick rows to remove several at once, plus sync, per-item **lock** (freeze edited content so update and sync never overwrite it), remove and prune for deselected leftovers |
 | **Updates** | Items whose catalog content moved upstream, with the four states (unchanged / upstream-changed / modified here / conflict) and *update all safe* — each section grouped by source — plus search and kind / source / ready-vs-conflict filters, and a banner when the pinned ref is older than the source's newest release tag |
 | **Presets** | Named selections that compose: adding one keeps every other preset and anything picked individually, and each card says exactly how many items it would add. Fourteen domain presets, alphabetical (Architecture, Aspire, Books & writing, Design, Devops, .NET Core / MAUI / Web & Blazor / WinUI / WPF, Review, Security), with **Tools** at 13, **Minimal** at 14 and **Everything** last; drawing on all four repositories, dependencies resolved |
-| **Settings** | Interpreter, project name/intention, **AI clients** (Claude Code default; Copilot and Reasonix opt-in), sources table (repo / ref / release / resolve / licence / hooks), maintenance actions |
+| **Settings** | Resolver status, project name/intention, **AI clients** (Claude Code default; Copilot and Reasonix opt-in), sources table (repo / ref / release / resolve / licence / hooks), maintenance actions |
 
 Plus a status-bar-style launcher view in the Explorer with a drift badge, and
 command-palette entries: Open, Select Skills and Agents, Check for Updates,
@@ -165,9 +165,10 @@ instructions (never real project files or `.github/workflows`).
 
 ## Design decisions
 
-- **The CLI is the only implementation.** Every list the webview renders comes
-  from one `catalog.py --json` call. The extension holds no resolution logic, so
-  it cannot drift from what CI enforces (`sync --check`, `index --verify`).
+- **One implementation: the .NET sidecar.** Every list the webview renders
+  comes from one sidecar request. The TypeScript host holds no resolution
+  logic, so it cannot drift from what CI enforces (`sync --check`,
+  `index --verify`). The bundled core is the resolver the VSIX runs.
 - **Loud about cost.** The resolver exists because 530 installed skills is
   noise. Presets are recommended, `Everything` is never the default but never hidden,
   and the delta on every card says exactly how many items it would add.
@@ -177,10 +178,10 @@ instructions (never real project files or `.github/workflows`).
   deliberately. The current resolver preserves lock entries for kinds it does
   not know; an older client does not, so upgrade before pruning a project that
   uses newer kinds such as prompts.
-- **The template owns its resolver; the project owns everything else.**
-  Setup writes the whole `.ai/scripts/` set (resolver, mirrors, hygiene,
-  migration, upgrade), the vocabulary under `.ai/catalog/`, and the agent
-  configuration, recording provenance in `.ai/tooling.json`. A file the template
+- **The core owns the resolver; the project owns everything else.**
+  Setup writes the vocabulary under `.ai/catalog/`, the agent configuration and
+  any template-owned scripts the pinned template still ships, recording
+  provenance in `.ai/tooling.json`. A file the template
   no longer ships is filled from the extension's bundled copy. Template files
   are refreshed only on an explicit update-to-release; a file the project
   created, or a template file edited after install, is never overwritten by a
@@ -195,11 +196,41 @@ instructions (never real project files or `.github/workflows`).
 - **Native in every theme.** Styling uses only `--vscode-*` variables, so light,
   dark and high-contrast all work without a single hard-coded colour.
 
+## Performance
+
+The resolver moved from Python to the .NET sidecar. The numbers below are medians of three
+interleaved paired rounds on the reference machine (Windows 11 arm64, Node 26.12.1, .NET SDK
+11.0.100-rc.3, Release). The baseline is the pre-cutover `catalog.py` at commit `73f40b5`; the
+synthetic workload has 1,040 catalog items and the real fixture is the repository's 10-item
+parity fixture. "Sidecar" means the same operation through the real NDJSON transport.
+
+| Workload | Python | C# in-process | C# sidecar |
+|---|---:|---:|---:|
+| Synthetic index | 565.8 ms | **313.1 ms** | — |
+| Synthetic browse | 1,134.6 ms | **526.2 ms** | **532.0 ms** |
+| Real index | 4.09 ms | **1.29 ms** | — |
+| Real browse | 10.37 ms | **2.45 ms** | **2.56 ms** |
+
+| Memory | Python | C# |
+|---|---:|---:|
+| Allocation per synthetic browse | 3.77 MB (proxy) | 23.82 MB (exact) |
+| Retained after collection, synthetic | below noise floor | ~1.10 MB |
+| Sidecar RSS, synthetic | — | 29.5 MB idle → 61.3 MB after 50 calls → 72.0 MB peak → 63.3 MB settled |
+| Host `JSON.parse` for the 647 KB payload | — | 1.03 ms / +1.59 MB heap |
+
+**Verdict: faster, but heavier.** The sidecar is 2–4× faster on the measured operations, but the
+C# core allocates ~7× more per synthetic operation and the extension carries a persistent
+~29 MB-idle / ~63 MB-loaded process. On the small real fixture, allocation is at parity and the
+win is latency only. Cold sidecar start is ~78–80 ms, paid once per extension host. Python's
+synthetic index varied by run (560–1,387 ms), so the index speedup is reported as a range
+(1.8–3.4×), while browse was stable. Full method, per-round data and limitations:
+[`.ai/completed/sidecar-benchmark.md`](https://github.com/I-Synergy/AIWorkspaceManager/blob/main/.ai/completed/sidecar-benchmark.md).
+
 ## Requirements
 
 - Any folder. On first activation AI Workspace Manager sets it up from the template:
-  `.ai/ai.json`, the resolver and vocabulary under `.ai/` (`.ai/scripts/`,
-  `.ai/catalog/`), and the agent configuration: `AGENTS.md`,
+  `.ai/ai.json`, the vocabulary under `.ai/catalog/`, any template scripts the pinned source
+  still ships, and the agent configuration: `AGENTS.md`,
   `.github/copilot-instructions.md`, `.claude/settings.json` and
   `.gitattributes`. A brand-new project also gets the supporting folders an
   agent expects — `analysis`, `checklists`, `completed`, `patterns`, `plans`,
@@ -208,8 +239,8 @@ instructions (never real project files or `.github/workflows`).
   removed; the same setup can be re-run from Settings. On an existing project, setup also
   adds any newly offered third-party source to `.ai/ai.json`, leaving the
   selection untouched.
-- Python on `PATH`, or set `aiManager.pythonPath`. The resolver itself ships
-  inside the VSIX.
+- The .NET 8+ runtime and `dotnet` on `PATH`. The sidecar itself ships
+  inside the VSIX as a framework-dependent IL build (`dist/core`).
 
 For updates to be meaningful, the source must resolve remotely:
 
@@ -235,7 +266,8 @@ so it is reported without a "newer" claim. Bumping the pin stays a manifest edit
 npm install
 npm run compile        # tsc --noEmit, strict
 npm test               # pure-logic unit tests (node --test)
-npm run test:resolver  # resolver tests (pytest, test/resolver)
+npm run test:core      # C# sidecar tests (MSTest)
+npm run build:core     # dotnet publish -> dist/core (also run by vscode:prepublish)
 npm run build          # esbuild: dist/extension.js, dist/web.js, dist/web.css
 npm run dev            # build, then serve the real webview in a browser
 ```
@@ -247,25 +279,26 @@ so the UI can be reviewed and screenshotted without VS Code:
 - `?theme=light` — light theme
 - `?scenario=empty` — a brand-new repository, the install-everything starting point
 
-The fixtures are generated from the real resolver
-(`catalog.py browse --json`), so the screenshots show real catalog content.
+The fixtures are generated from the real resolver (the sidecar's `getBrowse`
+payload), so the screenshots show real catalog content.
 
 ## Layout
 
 ```
-src/common/     types shared by both sides + the typed RPC layer
-src/host/       activation, full-page panel, HostAPI (shells out to catalog.py)
-src/web/        Lit components, store, router, logic.ts (pure, unit-tested)
-tools/          dev harness: index.html, mock-api.js, dev-server.mjs, fixtures
-tooling/        committed resolver snapshot the VSIX runs (see Packaging)
-test/           pure-logic tests (node) + test/resolver/ (pytest)
-scripts/        sync-tooling (snapshot) + install-tooling (vendor into a repo)
+src/AiWorkspaceManager.VSCode.Host/      activation, panel, HostAPI (delegates to the .NET core)
+src/AiWorkspaceManager.VSCode.Common/    types and the typed postMessage RPC
+src/AiWorkspaceManager.VSCode.Webview/   Lit components, store, router, logic.ts (pure, unit-tested)
+src/AiWorkspaceManager.*/                C# sidecar: Common, Catalog, Workspace, Core
+tests/                                   C# test projects (MSTest), shared fixtures and the Node logic tests
+tools/                                   dev harness: index.html, mock-api.js, dev-server.mjs, fixtures
+tooling/                                 committed vocabulary snapshot the VSIX installs
+scripts/                                 sync-tooling (build-time snapshot)
 ```
 
-`src/web/logic.ts` holds all parsing, filtering, grouping and delta maths and
-imports nothing from `vscode` or `lit`, which is what makes it testable without
-an editor host — the same reason the reference NuGet manager splits `src/web`
-from `src/host`.
+`src/AiWorkspaceManager.VSCode.Webview/logic.ts` holds all parsing, filtering,
+grouping and delta maths and imports nothing from `vscode` or `lit`, which is
+what makes it testable without an editor host — the same reason the reference
+NuGet manager splits the webview from the host.
 
 ## Packaging
 
@@ -273,8 +306,9 @@ from `src/host`.
 npm run package   # -> releases/aiworkspacemanager-<version>.vsix
 ```
 
-`.vscodeignore` keeps the bundle to the compiled output; the CI workflow asserts
-the VSIX stays under 2 MB so a leaked `node_modules` cannot slip through.
+``.vscodeignore` keeps the source and test folders out; the CI workflow asserts
+the VSIX stays under 16 MB (the framework-dependent core is ~4.5 MB) so a
+leaked `node_modules` cannot slip through.
 
 ## Publishing
 
@@ -298,20 +332,20 @@ Add the `VSCE_PAT` repository secret (Marketplace → **Manage** scope for the
 
 ## Tooling snapshot
 
-`tooling/` is the resolver the VSIX actually runs (`catalog.py`, its sibling
-scripts, the vocabulary and the schemas). It is committed, so a fresh clone
+`tooling/` is the vocabulary the sidecar reads (presets, categories and the
+schemas) plus `.gitignore` metadata. The resolver itself is the C# core, so there
+are no Python scripts in the VSIX. The snapshot is committed, so a fresh clone
 builds without a template checkout; `tooling.json` records each file's size.
 
 - `npm run sync-tooling` — refresh it from a template checkout: `AI_TEMPLATE_ROOT`
-  if set, otherwise `../../.ai/scripts/catalog.py` when the extension lives inside
-  the template repository. With neither, the committed snapshot is verified and
-  used.
+  if set, otherwise `../../catalog/` when the extension lives inside the template
+  repository. With neither, the committed snapshot is verified and used.
 - `npm run sync-tooling -- --check` — verify the snapshot without writing (CI).
 - `npm run sync-tooling -- --stamp` — recompute `tooling.json` after editing a
   file in place, which is how this standalone checkout updates the snapshot.
 
 `npm run build` runs the verify path first, so an incomplete snapshot fails the
-build instead of shipping a VSIX without the resolver.
+build instead of shipping a VSIX without the vocabulary.
 
 ## Icon
 

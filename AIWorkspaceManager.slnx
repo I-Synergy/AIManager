@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AiWorkspaceManager.Common/AiWorkspaceManager.Common.csproj" />
+    <Project Path="src/AiWorkspaceManager.Core.Catalog/AiWorkspaceManager.Core.Catalog.csproj" />
+    <Project Path="src/AiWorkspaceManager.Core.Workspace/AiWorkspaceManager.Core.Workspace.csproj" />
+    <Project Path="src/AiWorkspaceManager.Core/AiWorkspaceManager.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AiWorkspaceManager.Common.Tests/AiWorkspaceManager.Common.Tests.csproj" />
+    <Project Path="tests/AiWorkspaceManager.Core.Catalog.Tests/AiWorkspaceManager.Core.Catalog.Tests.csproj" />
+    <Project Path="tests/AiWorkspaceManager.Core.Workspace.Tests/AiWorkspaceManager.Core.Workspace.Tests.csproj" />
+    <Project Path="tests/AiWorkspaceManager.Core.Tests/AiWorkspaceManager.Core.Tests.csproj" />
+    <Project Path="tests/AiWorkspaceManager.TestUtilities/AiWorkspaceManager.TestUtilities.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+</Solution>

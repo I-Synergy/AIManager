@@ -1,0 +1,194 @@
+{
+  "indexVersion": 1,
+  "generatedBy": "python .ai/scripts/catalog.py index",
+  "shadowed": [
+    {
+      "id": "awesome-copilot:alpha",
+      "by": "template:alpha",
+      "path": ".ai/skills/alpha"
+    }
+  ],
+  "items": [
+    {
+      "id": "awesome-copilot:delta",
+      "source": "awesome-copilot",
+      "kind": "skill",
+      "name": "delta",
+      "path": ".ai/skills/delta",
+      "sourcePath": "skills/delta",
+      "description": "Delta skill",
+      "category": "copilot",
+      "tags": [
+        "docs"
+      ],
+      "ref": "main",
+      "sha256": "c459097727eb3390bd081e39b19720277f354bc8e8c4a039aa651191bf1604d3",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/github/awesome-copilot/tree/main/skills/delta",
+      "requires": []
+    },
+    {
+      "id": "labs:gamma",
+      "source": "labs",
+      "kind": "skill",
+      "name": "gamma",
+      "path": ".ai/skills/gamma",
+      "sourcePath": "plugins/one/skills/gamma",
+      "description": "Gamma skill",
+      "category": "labs",
+      "tags": [],
+      "ref": "main",
+      "sha256": "b928eb24319ca081a35cc6c350646182ec7540f00bf403122466a4e5a4263a97",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/example/labs/tree/main/plugins/one/skills/gamma",
+      "requires": []
+    },
+    {
+      "id": "labs:review",
+      "source": "labs",
+      "kind": "agent",
+      "name": "review",
+      "path": ".ai/agents/review.md",
+      "sourcePath": ".github/agents/review.agent.md",
+      "description": "Labs review agent",
+      "category": "labs",
+      "tags": [],
+      "ref": "main",
+      "sha256": "b40ab9fd17113e25bec73ce0052a1489c55e994f115ac405b64102f81c95d9b3",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/example/labs/tree/main/.github/agents/review.agent.md",
+      "requires": []
+    },
+    {
+      "id": "template:alpha",
+      "source": "template",
+      "kind": "skill",
+      "name": "alpha",
+      "path": ".ai/skills/alpha",
+      "sourcePath": ".ai/skills/alpha",
+      "description": "Alpha skill",
+      "category": "architecture",
+      "tags": [
+        "core"
+      ],
+      "ref": "v1",
+      "sha256": "f127ab7aed473765f57c957e901d39f8bcbc5853b91e4567d68eefda0c28ea1f",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/skills/alpha",
+      "requires": [
+        "template:beta"
+      ]
+    },
+    {
+      "id": "template:beta",
+      "source": "template",
+      "kind": "skill",
+      "name": "beta",
+      "path": ".ai/skills/beta",
+      "sourcePath": ".ai/skills/beta",
+      "description": "Beta skill",
+      "category": "testing",
+      "tags": [
+        "quality"
+      ],
+      "ref": "v1",
+      "sha256": "497589bed9872e35a21ee1f3544e8c6c652198b7e3a77ffa69fb068c1caa763e",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/skills/beta",
+      "requires": []
+    },
+    {
+      "id": "template:demo",
+      "source": "template",
+      "kind": "plugin",
+      "name": "demo",
+      "path": ".ai/plugins/demo",
+      "sourcePath": ".ai/plugins/demo",
+      "description": "Demo plugin",
+      "category": "uncategorised",
+      "tags": [],
+      "ref": "v1",
+      "sha256": "a3277c849e929b8652917a9d625991a02d27290c1dd843e0e94f5446798b18e4",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/plugins/demo",
+      "requires": []
+    },
+    {
+      "id": "template:guard",
+      "source": "template",
+      "kind": "hook",
+      "name": "guard",
+      "path": ".ai/hooks/guard",
+      "sourcePath": ".ai/hooks/guard",
+      "description": "Guard hook",
+      "category": "uncategorised",
+      "tags": [],
+      "ref": "v1",
+      "sha256": "314955b7324e62ac2dd8bf3a0c73756a841e204821d82b6a5473e7d90feea29d",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/hooks/guard",
+      "requires": []
+    },
+    {
+      "id": "template:lead",
+      "source": "template",
+      "kind": "agent",
+      "name": "lead",
+      "path": ".ai/agents/lead.md",
+      "sourcePath": ".ai/agents/lead.agent.md",
+      "description": "Leads work",
+      "category": "uncategorised",
+      "tags": [],
+      "ref": "v1",
+      "sha256": "79880356a82eeafff20cfcd23ffb82e7a4f212febf02bbd72319f922ba6acb25",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/agents/lead.agent.md",
+      "requires": [
+        "template:alpha",
+        "template:beta"
+      ]
+    },
+    {
+      "id": "template:review",
+      "source": "template",
+      "kind": "prompt",
+      "name": "review",
+      "path": ".ai/prompts/review.prompt.md",
+      "sourcePath": ".ai/prompts/review.prompt.md",
+      "description": "Review prompt",
+      "category": "testing",
+      "tags": [],
+      "ref": "v1",
+      "sha256": "e2bd99c549ac61ec2e3c1396c08a7a16acd4a1613f0c457fb6f74e5372db0b62",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/prompts/review.prompt.md",
+      "requires": []
+    },
+    {
+      "id": "template:style",
+      "source": "template",
+      "kind": "instruction",
+      "name": "style",
+      "path": ".ai/instructions/style.instructions.md",
+      "sourcePath": ".ai/instructions/style.instructions.md",
+      "description": "House style",
+      "category": "docs",
+      "tags": [],
+      "ref": "v1",
+      "sha256": "e47b461a46b380bc39b81c80f67d0e93703c7d1609b84534777f03f05e26f355",
+      "files": 1,
+      "license": "MIT",
+      "upstream": "https://github.com/I-Synergy/AI/tree/v1/.ai/instructions/style.instructions.md",
+      "requires": []
+    }
+  ]
+}

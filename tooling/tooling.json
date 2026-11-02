@@ -1,38 +1,6 @@
 {
   "files": [
     {
-      "path": ".ai/scripts/catalog.py",
-      "bytes": 181961
-    },
-    {
-      "path": ".ai/scripts/sync-platforms.py",
-      "bytes": 8288
-    },
-    {
-      "path": ".ai/scripts/sync-skills.py",
-      "bytes": 630
-    },
-    {
-      "path": ".ai/scripts/sync-agents.py",
-      "bytes": 753
-    },
-    {
-      "path": ".ai/scripts/upgrade-template.py",
-      "bytes": 18798
-    },
-    {
-      "path": ".ai/scripts/hygiene-lint.py",
-      "bytes": 6230
-    },
-    {
-      "path": ".ai/scripts/migrate-to-ai.py",
-      "bytes": 11334
-    },
-    {
-      "path": ".ai/tests/validate-release.py",
-      "bytes": 12269
-    },
-    {
       "path": "catalog/presets.json",
       "bytes": 12998
     },

@@ -3,8 +3,11 @@ node_modules/
 
 # Build output
 dist/
+bin/
+obj/
+TestResults/
 out-test/
-releases/
+/releases/
 *.vsix
 .tooling-staging/
 

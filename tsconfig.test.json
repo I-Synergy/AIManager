@@ -11,9 +11,13 @@
     "rootDir": "src",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": []
+    "types": [
+      "node"
+    ]
   },
   "include": [
-    "src/web/logic.ts"
+    "src/AiWorkspaceManager.VSCode.Webview/logic.ts",
+    "src/AiWorkspaceManager.VSCode.Host/core-params.ts",
+    "src/AiWorkspaceManager.VSCode.Host/core-client.ts"
   ]
 }
