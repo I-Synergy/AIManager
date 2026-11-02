@@ -13,7 +13,7 @@ namespace AiWorkspaceManager.Core.Workspace;
 /// </summary>
 public sealed partial class GitSourceFetcher : ISourceFetcher
 {
-    private const int TagTimeoutMs = 30_000;
+    private const int TagTimeoutMs = 15_000;
 
     private readonly WorkspacePaths paths;
     private readonly bool offline;
@@ -50,7 +50,7 @@ public sealed partial class GitSourceFetcher : ISourceFetcher
             var fetch = Run(
                 "git",
                 ["-C", target, "fetch", "--quiet", "--depth", "1", "origin", reference],
-                timeoutMs: 120_000);
+                timeoutMs: 60_000);
             if (fetch.Code == 0)
             {
                 var checkout = Run(
@@ -72,7 +72,10 @@ public sealed partial class GitSourceFetcher : ISourceFetcher
 
         Console.Error.WriteLine($"fetching {name} @ {reference} ...");
         var cloneStarted = Stopwatch.GetTimestamp();
-        var clone = Run("git", ["clone", "--quiet", "--depth", "1", "--branch", reference, url, target]);
+        var clone = Run(
+            "git",
+            ["clone", "--quiet", "--depth", "1", "--branch", reference, url, target],
+            timeoutMs: 120_000);
         if (clone.Code == 0)
         {
             Console.Error.WriteLine(
@@ -93,7 +96,7 @@ public sealed partial class GitSourceFetcher : ISourceFetcher
         ];
         foreach (var (arguments, workingDirectory) in steps)
         {
-            var done = Run("git", arguments, workingDirectory);
+            var done = Run("git", arguments, workingDirectory, timeoutMs: 60_000);
             if (done.Code == 0)
             {
                 continue;
@@ -183,9 +186,15 @@ public sealed partial class GitSourceFetcher : ISourceFetcher
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            // The sidecar's stdin is the JSON-RPC pipe. A git subprocess must never inherit it:
+            // a credential prompt can consume protocol lines and then sit until the timeout.
+            RedirectStandardInput = true,
             UseShellExecute = false,
             CreateNoWindow = true,
         };
+        start.Environment["GIT_TERMINAL_PROMPT"] = "0";
+        start.Environment["GCM_INTERACTIVE"] = "never";
+        start.Environment["GIT_OPTIONAL_LOCKS"] = "0";
         foreach (var argument in arguments)
         {
             start.ArgumentList.Add(argument);
@@ -213,6 +222,7 @@ public sealed partial class GitSourceFetcher : ISourceFetcher
 
         using (process)
         {
+            process.StandardInput.Close();
             var stdout = process.StandardOutput.ReadToEndAsync();
             var stderr = process.StandardError.ReadToEndAsync();
             if (timeoutMs > 0 && !process.WaitForExit(timeoutMs))

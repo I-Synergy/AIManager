@@ -572,17 +572,16 @@ public sealed class WorkspaceQueries
     public ReleasePayload Release()
     {
         var manifest = ManifestOrStarter();
-        var rows = new List<ReleaseRow>();
-        foreach (var (name, entry) in SourceCatalog.Sources(manifest))
+        var entries = SourceCatalog.Sources(manifest)
+            .Where(source => source.Entry["path"] is null)
+            .ToList();
+        var rows = new ReleaseRow[entries.Count];
+        // Tag reads are independent network calls. Sequentially, one unreachable source added
+        // its full timeout before the next one started; the Updates tab paid that five times.
+        Parallel.For(0, entries.Count, index =>
         {
-            if (entry["path"] is not null)
-            {
-                continue;
-            }
-
-            rows.Add(ReleaseRow(name, entry));
-        }
-
+            rows[index] = ReleaseRow(entries[index].Name, entries[index].Entry);
+        });
         return new ReleasePayload(Offline, rows.Where(row => row.Newer).Select(row => row.Id).ToList(), rows);
     }
 
