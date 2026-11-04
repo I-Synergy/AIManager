@@ -88,6 +88,28 @@ jobs:
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # Publishing is not idempotent: vsce has no --skip-duplicate, so a re-run
+      # after a late failure (for example a rejected tag push) would fail on an
+      # already-published version. Open VSX is the immediately consistent marker
+      # of a build that already went out; use it to skip republishing it.
+      - name: Check whether the version is already published
+        id: registry
+        if: steps.gate.outputs.publish == 'true'
+        shell: bash
+        run: |
+          set -uo pipefail
+          version="${{ steps.build.outputs.build_number }}"
+          # The query parameter sidesteps the CDN, which can serve a cached 404
+          # for a version published moments earlier.
+          code="$(curl -s -o /dev/null -w '%{http_code}' \
+            "https://open-vsx.org/api/I-Synergy/aiworkspacemanager/${version}?t=$(date +%s)")"
+          if [ "$code" = "200" ]; then
+            echo "::notice::Version ${version} is already on Open VSX; skipping the registry publishes."
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # The committed version is a development baseline. Every release packages
       # the derived version, so releasing never requires a version-bump commit.
       - name: Set package version
@@ -135,7 +157,7 @@ jobs:
           cp releases/aiworkspacemanager-*.vsix aiworkspacemanager.vsix
 
       - name: Publish to VS Code Marketplace
-        if: steps.gate.outputs.publish == 'true'
+        if: steps.gate.outputs.publish == 'true' && steps.registry.outputs.already_published != 'true'
         run: npx --yes --ignore-scripts @vscode/vsce publish --packagePath aiworkspacemanager.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
@@ -143,23 +165,52 @@ jobs:
       # Trusted publishing: the OIDC ID token replaces a stored token. Do not add
       # a token secret or a PAT argument; either one silently disables it.
       - name: Publish to Open VSX
-        if: steps.gate.outputs.publish == 'true'
+        if: steps.gate.outputs.publish == 'true' && steps.registry.outputs.already_published != 'true'
         run: npx --yes --ignore-scripts ovsx@1.3.0 publish aiworkspacemanager.vsix --trusted-publishing --skip-duplicate
 
       - name: Tag release
         if: steps.gate.outputs.publish == 'true'
+        shell: bash
         run: |
+          set -euo pipefail
+          tag="${{ steps.build.outputs.build_number }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.build.outputs.build_number }}" -m "Release ${{ steps.build.outputs.build_number }}"
-          git push origin "${{ steps.build.outputs.build_number }}"
+          git tag -a "$tag" -m "Release $tag"
+          # GitHub occasionally rejects ref writes with a transient 500. Retry, so
+          # a version that is already published still gets its tag and release.
+          for attempt in 1 2 3 4 5; do
+            if git push origin "$tag"; then
+              exit 0
+            fi
+            delay=$((attempt * 5))
+            echo "::warning::Tag push attempt $attempt failed; retrying in ${delay}s."
+            sleep "$delay"
+          done
+          echo "::error::Could not push tag $tag after 5 attempts."
+          exit 1
 
       - name: Create GitHub Release
         if: steps.gate.outputs.publish == 'true'
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ steps.build.outputs.build_number }}" aiworkspacemanager.vsix \
-            --title "${{ steps.build.outputs.build_number }}" \
-            --generate-notes \
-            --verify-tag
+          set -euo pipefail
+          tag="${{ steps.build.outputs.build_number }}"
+          for attempt in 1 2 3; do
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "::notice::Release $tag already exists."
+              exit 0
+            fi
+            if gh release create "$tag" aiworkspacemanager.vsix \
+              --title "$tag" \
+              --generate-notes \
+              --verify-tag; then
+              exit 0
+            fi
+            echo "::warning::Release creation attempt $attempt failed; retrying in 5s."
+            sleep 5
+          done
+          echo "::error::Could not create the GitHub Release for $tag."
+          exit 1
