@@ -1,0 +1,165 @@
+# Release versioning and publishing on every push to main.
+#
+# Versions are never bumped by hand. Each release derives its version from the
+# UTC build time in the form YYYY.1MMdd.1HHmm:
+#   1. derive the build number (or accept one via workflow_dispatch),
+#   2. stop when the tag already exists,
+#   3. set the derived version in package.json for this run only,
+#   4. build, test and package the .vsix,
+#   5. publish it to the VS Code Marketplace and Open VSX,
+#   6. tag the commit with the build number (no `v` prefix) and create a
+#      GitHub Release with notes generated from the commits since the last tag.
+#
+# `main` is never modified and no changelog or release-notes file is committed.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "Build number (YYYY.1MMdd.1HHmm). Leave empty to use the current UTC time."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  # Required for Open VSX trusted publishing: the job exchanges a GitHub OIDC ID
+  # token for a short-lived Open VSX token. Do not add a token secret here
+  # instead; it would take precedence and silently disable trusted publishing.
+  id-token: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  # Open VSX trusted publishing binds the OIDC ID token to the repository, the
+  # workflow filename and the environment. The publisher registration on
+  # open-vsx.org must name this repository (I-Synergy/AIWorkspaceManager), the
+  # workflow `release.yml` and the environment `production`, or the token
+  # exchange is rejected. `production` is restricted to `main`, so a feature
+  # branch cannot publish even if it runs this workflow.
+  release:
+    name: Version, publish and tag
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout (full history and tags)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: lts/*
+
+      - name: Resolve build number
+        id: build
+        shell: bash
+        env:
+          INPUT_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          set -euo pipefail
+          build_number="$INPUT_BUILD_NUMBER"
+          if [ -z "$build_number" ]; then
+            build_number="$(date -u +'%Y.1%m%d.1%H%M')"
+          fi
+          if ! [[ "$build_number" =~ ^[0-9]{4}\.1[0-9]{4}\.1[0-9]{4}$ ]]; then
+            echo "::error::Invalid build number '$build_number'. Expected YYYY.1MMdd.1HHmm."
+            exit 1
+          fi
+          echo "Build number: $build_number"
+          echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
+
+      - name: Skip when the tag already exists
+        id: gate
+        shell: bash
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.build.outputs.build_number }}" >/dev/null 2>&1; then
+            echo "::notice::Tag ${{ steps.build.outputs.build_number }} already exists; skipping release."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The committed version is a development baseline. Every release packages
+      # the derived version, so releasing never requires a version-bump commit.
+      - name: Set package version
+        if: steps.gate.outputs.publish == 'true'
+        run: npm version "${{ steps.build.outputs.build_number }}" --no-git-tag-version --allow-same-version
+
+      - name: Install dependencies
+        if: steps.gate.outputs.publish == 'true'
+        run: npm ci --ignore-scripts
+
+      - name: Type check
+        if: steps.gate.outputs.publish == 'true'
+        run: npm run compile
+
+      - name: Extension tests
+        if: steps.gate.outputs.publish == 'true'
+        run: npm test
+
+      - name: .NET SDK
+        if: steps.gate.outputs.publish == 'true'
+        run: dotnet --info
+
+      - name: C# build and tests
+        if: steps.gate.outputs.publish == 'true'
+        run: |
+          dotnet build AIWorkspaceManager.slnx -c Release
+          dotnet test AIWorkspaceManager.slnx -c Release --no-build
+
+      - name: Build
+        if: steps.gate.outputs.publish == 'true'
+        run: npm run build
+
+      - name: Package and check VSIX size
+        if: steps.gate.outputs.publish == 'true'
+        run: |
+          mkdir -p releases
+          npm run package
+          SIZE=$(stat -c%s releases/aiworkspacemanager-*.vsix)
+          echo "VSIX size: $SIZE bytes"
+          # The framework-dependent .NET core is ~4.5 MB; the extension itself is under 1 MB.
+          if [ "$SIZE" -gt 16777216 ]; then
+            echo "::error::VSIX exceeds 16 MB"
+            exit 1
+          fi
+          cp releases/aiworkspacemanager-*.vsix aiworkspacemanager.vsix
+
+      - name: Publish to VS Code Marketplace
+        if: steps.gate.outputs.publish == 'true'
+        run: npx --yes --ignore-scripts @vscode/vsce publish --packagePath aiworkspacemanager.vsix
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      # Trusted publishing: the OIDC ID token replaces a stored token. Do not add
+      # a token secret or a PAT argument; either one silently disables it.
+      - name: Publish to Open VSX
+        if: steps.gate.outputs.publish == 'true'
+        run: npx --yes --ignore-scripts ovsx@1.3.0 publish aiworkspacemanager.vsix --trusted-publishing --skip-duplicate
+
+      - name: Tag release
+        if: steps.gate.outputs.publish == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.build.outputs.build_number }}" -m "Release ${{ steps.build.outputs.build_number }}"
+          git push origin "${{ steps.build.outputs.build_number }}"
+
+      - name: Create GitHub Release
+        if: steps.gate.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.build.outputs.build_number }}" aiworkspacemanager.vsix \
+            --title "${{ steps.build.outputs.build_number }}" \
+            --generate-notes \
+            --verify-tag

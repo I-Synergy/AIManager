@@ -312,23 +312,30 @@ leaked `node_modules` cannot slip through.
 
 ## Publishing
 
-Releases are automatic. Every push to `main` gets a version from its UTC build
+Releases are automatic. Every push to `main` runs the `Release` workflow
+(`.github/workflows/release.yml`), which gets a version from its UTC build
 number, so there is no version bump, changelog commit or release branch:
 
-1. CI derives `YYYY.1MMdd.1HHmm` (for example `2026.11030.11435`).
+1. It derives `YYYY.1MMdd.1HHmm` (for example `2026.11030.11435`).
 2. It writes that version into `package.json`, builds and tests the extension,
    and packages the `.vsix`.
-3. The publish job publishes `I-Synergy.aiworkspacemanager`, tags the build
-   number (without a `v` prefix) and creates a GitHub Release with generated
-   notes and the `.vsix`.
+3. It publishes `I-Synergy.aiworkspacemanager` to the VS Code Marketplace and to
+   Open VSX, tags the build number (without a `v` prefix) and creates a GitHub
+   Release with generated notes and the `.vsix`.
 
-Pull requests run the same build and tests but never publish. To publish a
-specific build manually, run **Actions → CI → Run workflow** and optionally enter
-a build number. An existing tag is reported and skipped, so re-running a
+Pull requests run the build and tests from CI but never publish. To publish a
+specific build manually, run **Actions → Release → Run workflow** and optionally
+enter a build number. An existing tag is reported and skipped, so re-running a
 workflow does not republish a version.
 
 Add the `VSCE_PAT` repository secret (Marketplace → **Manage** scope for the
 `I-Synergy` publisher) once; no other release setup is required.
+
+Open VSX is fed by the same `.vsix` through GitHub trusted publishing, so no
+Open VSX token is stored. The Open VSX trusted-publisher registration must name
+this repository, the workflow `release.yml` and the environment `production`
+(restricted to `main`); storing an `OVSX_PAT` secret or passing `--pat` would
+take precedence and silently disable trusted publishing.
 
 ## Tooling snapshot
 
