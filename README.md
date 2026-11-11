@@ -239,8 +239,9 @@ synthetic index varied by run (560–1,387 ms), so the index speedup is reported
   removed; the same setup can be re-run from Settings. On an existing project, setup also
   adds any newly offered third-party source to `.ai/ai.json`, leaving the
   selection untouched.
-- The .NET 8+ runtime and `dotnet` on `PATH`. The sidecar itself ships
-  inside the VSIX as a framework-dependent IL build (`dist/core`).
+- The .NET 10+ runtime and `dotnet` on `PATH`. The sidecar itself ships
+  inside the VSIX as a framework-dependent IL build (`dist/core`) targeting `net10.0`;
+  `RollForward=LatestMajor` lets the same build run on the .NET 11 runtime.
 
 For updates to be meaningful, the source must resolve remotely:
 

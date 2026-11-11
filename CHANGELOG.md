@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- chore: the extension's .NET sidecar now targets **.NET 10 (LTS)** instead of .NET 8. The published build stays framework-dependent with `RollForward=LatestMajor`, so the same VSIX runs on the .NET 10 and .NET 11 runtimes. **Requires .NET 10 or newer on `PATH`** — machines with only .NET 8/9 can no longer start the sidecar. A `global.json` pins the SDK, the test stack moves to `Microsoft.NET.Test.Sdk` 18.12.0 and `MSTest.TestAdapter` 4.5.3, and CI installs the SDK declared in `global.json` rather than keeping its own version list.
 - **Hand-added skills no longer block sync.** A manifest entry that is not in any declared source but already exists on disk (for example `.ai/skills/ayah-translator`) is left untouched when another item is installed. An unknown id with no local files still fails, so typos are not hidden.
 - **Lock-recorded items stay visible when the manifest selection is empty.** Browse and Installed now treat a `.ai/ai.lock.json` entry as installed even when `ai.json` no longer lists it, so files that are already on disk no longer disappear from the Installed view. `pin` also refuses to write an empty selection over an existing one or over lock entries, preventing an upgrade from silently clearing the selection.
 

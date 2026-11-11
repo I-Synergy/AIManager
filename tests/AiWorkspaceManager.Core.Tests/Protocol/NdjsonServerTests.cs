@@ -28,7 +28,7 @@ public sealed class NdjsonServerTests
         return output.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries);
     }
 
-    private static JsonElement Parse(string line) => JsonDocument.Parse(line).RootElement;
+    private static JsonElement Parse(string line) => JsonElement.Parse(line);
 
     [TestMethod]
     [TestCategory("Unit")]

@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "i-synergy-github",
+        "projectKey": "I-Synergy_AIWorkspaceManager"
+    }
+}
