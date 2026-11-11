@@ -2,7 +2,7 @@
 
   <!-- Test project, one per source project. MSTest only; xUnit and NUnit are forbidden. -->
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>AiWorkspaceManager.Common.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>

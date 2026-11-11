@@ -2,7 +2,7 @@
 
   <!-- Catalog model: frontmatter, hashing, index, classification, presets, semver. -->
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>AiWorkspaceManager.Core.Catalog</RootNamespace>
   </PropertyGroup>
 
